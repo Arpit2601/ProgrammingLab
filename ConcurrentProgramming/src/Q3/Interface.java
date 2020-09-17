@@ -17,7 +17,7 @@ public class Interface {
     {
         jFrame = new JFrame("Calculator");
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        jFrame.setSize(500, 800);
+        jFrame.setSize(300, 500);
         jFrame.setResizable(false);
         jFrame.setLocationRelativeTo(null);
         numPad = new JPanel();
@@ -25,7 +25,10 @@ public class Interface {
 
         jTextArea = new JTextArea();
         jTextArea.setCaretColor(Color.WHITE);
-        jTextArea.setPreferredSize(new Dimension(500, 200));
+        jTextArea.setPreferredSize(new Dimension(300, 100));
+        Font font = jTextArea.getFont();
+        float size = font.getSize() + 5.0f;
+        jTextArea.setFont(font.deriveFont(size));
         jFrame.add(jTextArea, BorderLayout.NORTH);
 
         b0 = new JButton("0");numPadButtons[0]=b0;

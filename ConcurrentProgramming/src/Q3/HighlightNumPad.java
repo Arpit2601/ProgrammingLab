@@ -20,7 +20,7 @@ public class HighlightNumPad extends Thread{
             Interface.numPadButtons[i].setBackground(Color.GREEN);
             try
             {
-                Thread.sleep(2000);
+                Thread.sleep(1500);
             }
             catch (InterruptedException e)
             {

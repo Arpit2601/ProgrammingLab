@@ -20,7 +20,7 @@ public class HighlightFunctionPad extends Thread{
             Interface.functionPadButtons[i].setBackground(Color.ORANGE);
             try
             {
-                Thread.sleep(2000);
+                Thread.sleep(1500);
             }
             catch (InterruptedException e)
             {
