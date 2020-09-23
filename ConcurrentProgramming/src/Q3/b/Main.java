@@ -1,4 +1,4 @@
-package Q3;
+package Q3.b;
 
 
 public class Main {

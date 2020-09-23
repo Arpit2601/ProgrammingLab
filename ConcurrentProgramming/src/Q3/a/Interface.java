@@ -1,4 +1,4 @@
-package Q3;
+package Q3.a;
 
 import javax.swing.*;
 import java.awt.*;
@@ -53,8 +53,9 @@ public class Interface {
             @Override
             public void keyPressed(KeyEvent keyEvent) {
                 int key = keyEvent.getKeyCode();
-                if(key == KeyEvent.VK_ENTER)
+                if(key == KeyEvent.VK_ENTER && Main.Pad == 0)
                 {
+
                     // Check which numpad button has green background color
                     for(int i=0;i<10;i++)
                     {
@@ -64,17 +65,32 @@ public class Interface {
                             break;
                         }
                     }
+                    Main.Pad = 1;
+                    synchronized (Main.FunctionPadLock){
+                        Main.FunctionPadLock.notify();
+                    }
 
                 }
-                else if(key == KeyEvent.VK_SPACE)
+                else if(key == KeyEvent.VK_ENTER && Main.Pad == 1)
                 {
+                    String buttonText="";
                     // Check which function button has orange background color
                     for(int i=0;i<6;i++)
                     {
                         if(functionPadButtons[i].getBackground() == Color.ORANGE)
                         {
+                            buttonText = functionPadButtons[i].getText();
                             Calculate.display(functionPadButtons[i].getText());
                             break;
+                        }
+                    }
+                    // If button clicked was Stop then keep highlighting functionPad (for Clear) else start Numpad
+
+                    if(!buttonText.equals("Stop"))
+                    {
+                        Main.Pad = 0;
+                        synchronized (Main.NumPadLock) {
+                            Main.NumPadLock.notify();
                         }
                     }
 
