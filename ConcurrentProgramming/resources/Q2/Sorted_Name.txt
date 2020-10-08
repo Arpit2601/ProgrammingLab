@@ -1,0 +1,5 @@
+Abdul Najim,174101012,abdul12@iitg.ac.in,29,TA2
+Amit Kumar Sharma,174101055,amit55@iitg.ac.in,75,TA1
+Kunal Kishore,174101058,kunal58@iitg.ac.in,67,TA2
+Savnam Khatam,174101035,savanam35@iig.ac.in,114,CC
+Subhra Shivani,174101033,subhra33@iitg.ac.in,53,CC

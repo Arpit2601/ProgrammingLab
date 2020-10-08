@@ -7,30 +7,49 @@ import java.awt.event.KeyListener;
 
 public class Interface {
 
+    /*
+        jFrame: contains all the components of UI
+        jTextArea: used to display queries and their answers
+        JPanel: contains buttons for numbers and functions separately
+     */
+
     static JFrame jFrame;
     static JTextArea jTextArea;
     static JPanel numPad, functionPad;
     static JButton b1, b2, b3, b4, b5, b6, b7, b8, b9, b0, add, sub, mul, div, stop, clear;
     static JButton[] numPadButtons = new JButton[10];
     static JButton[] functionPadButtons = new JButton[6];
+
+    // Function to add components to the window
     public  static void AddComponents()
     {
+        /*
+               Initial code for window i.e. setting is size, name and exit by clicking on x
+         */
         jFrame = new JFrame("Calculator");
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.setSize(300, 500);
         jFrame.setResizable(false);
         jFrame.setLocationRelativeTo(null);
+
         numPad = new JPanel();
         functionPad = new JPanel();
 
+        /*
+            Setting the position, color, font size and text area size.
+         */
         jTextArea = new JTextArea();
         jTextArea.setCaretColor(Color.WHITE);
         jTextArea.setPreferredSize(new Dimension(300, 100));
         Font font = jTextArea.getFont();
         float size = font.getSize() + 5.0f;
         jTextArea.setFont(font.deriveFont(size));
-        jFrame.add(jTextArea, BorderLayout.NORTH);
+        jTextArea.setLineWrap(true);
+        jFrame.add(jTextArea, BorderLayout.NORTH);      // Placing the text area on the top of window
 
+        /*
+            Making buttons for numpad and placing them in numPadButtons array
+         */
         b0 = new JButton("0");numPadButtons[0]=b0;
         b1 = new JButton("1");numPadButtons[1]=b1;
         b2 = new JButton("2");numPadButtons[2]=b2;
@@ -43,49 +62,69 @@ public class Interface {
         b9 = new JButton("9");numPadButtons[9]=b9;
 
         
-
+        /*
+            Key event listener for whole window
+         */
         jFrame.addKeyListener(new KeyListener() {
+
             @Override
             public void keyTyped(KeyEvent keyEvent) {
 
             }
 
+            /*
+                On key pressed:
+                    1) if Enter key is pressed and currently numpad is active:
+                        a) check which numpad button has green color i.e. is highlighted
+                        b) send this number to Calculate class which will display it and do further computation
+                        c) Also acquire the lock for function pad and notify the thread (HighlightFunctionPad) waiting
+                           for this lock to move ahead.
+                     2) if Enter key is pressed and currently functionpad is active:
+                        a) check which functionPad button has orange color i.e. is highlighted
+                        b) send this function to Calculate class which will display it and do further computation
+                        c) If this button was that of stop then continue highlighting the function pad as we wait for
+                           clear command.
+                        c) Else acquire the lock for number pad and notify the thread (HighlightNumberPad) waiting
+                           for this lock to move ahead.
+             */
             @Override
             public void keyPressed(KeyEvent keyEvent) {
                 int key = keyEvent.getKeyCode();
+                // Key pressed when in NumPad
                 if(key == KeyEvent.VK_ENTER && Main.Pad == 0)
                 {
-
-                    // Check which numpad button has green background color
                     for(int i=0;i<10;i++)
                     {
                         if(numPadButtons[i].getBackground() == Color.GREEN)
                         {
                             Calculate.display(numPadButtons[i].getText());
+                            numPadButtons[i].doClick();
                             break;
                         }
                     }
+
                     Main.Pad = 1;
                     synchronized (Main.FunctionPadLock){
                         Main.FunctionPadLock.notify();
                     }
 
                 }
+                // Key pressed when in FunctionPad
                 else if(key == KeyEvent.VK_ENTER && Main.Pad == 1)
                 {
                     String buttonText="";
-                    // Check which function button has orange background color
                     for(int i=0;i<6;i++)
                     {
                         if(functionPadButtons[i].getBackground() == Color.ORANGE)
                         {
                             buttonText = functionPadButtons[i].getText();
                             Calculate.display(functionPadButtons[i].getText());
+                            functionPadButtons[i].doClick();
                             break;
                         }
                     }
-                    // If button clicked was Stop then keep highlighting functionPad (for Clear) else start Numpad
 
+                    // If button clicked was Stop then keep highlighting functionPad (for Clear) else start Numpad
                     if(!buttonText.equals("Stop"))
                     {
                         Main.Pad = 0;
@@ -103,13 +142,13 @@ public class Interface {
             }
         });
 
+        // Adding number buttons to numPad
         for(int i=0;i<10;i++)
         {
-            numPadButtons[i].setBackground(Color.GRAY);
             numPad.add(numPadButtons[i]);
         }
         numPad.setLayout(new GridLayout(4, 3));
-        jFrame.add(numPad, BorderLayout.CENTER);
+        jFrame.add(numPad, BorderLayout.CENTER);    // Place numPad at the center of window
 
         add = new JButton("+");functionPadButtons[0]=add;
         sub = new JButton("-");functionPadButtons[1]=sub;
@@ -118,21 +157,21 @@ public class Interface {
         stop = new JButton("Stop");functionPadButtons[4]=stop;
         clear = new JButton("Clear");functionPadButtons[5]=clear;
 
+        // adding function buttons to functionPad
         for(int i=0;i<6;i++)
         {
-            functionPadButtons[i].setBackground(Color.GRAY);
             functionPad.add(functionPadButtons[i]);
         }
 
-
         functionPad.setLayout(new GridLayout(3, 2));
-        jFrame.add(functionPad, BorderLayout.SOUTH);
+        jFrame.add(functionPad, BorderLayout.SOUTH);    // Place functionPad at the bottom of window
 
         jFrame.setFocusable(true);
         jFrame.setVisible(true);
     }
 
-    static void CreateInterface()
+    // Function to add create interface
+    public static void CreateInterface()
     {
         AddComponents();
     }

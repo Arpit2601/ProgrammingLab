@@ -1,52 +1,96 @@
 package Q1;
 
+import java.util.concurrent.CountDownLatch;
+
 public class MatchingMachine extends Thread {
 
     private static Boolean running = true;
     private static String Name;
+    private static CountDownLatch latch;
+    private static Boolean StoppingCondition = false;
 
-    public MatchingMachine(String name)
+    public MatchingMachine(String name, CountDownLatch latch)
     {
         Name = name;
+        MatchingMachine.latch = latch;
     }
+
+    /*
+        Basically removes two socks (of same color) from BufferSockMatching (if available) and passes them to BufferMatchingShelf
+     */
     @Override
     public void run()
     {
+        try
+        {
+            latch.await();
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println(Name + " started.");
+
         while(running)
         {
-            // Try for each block
+            /*
+                Try to acquire lock for each color, if acquired then if there are two socks of this color then pass them
+                to next buffer (again after acquiring lock)
+             */
             for(int i=0;i<4;i++)
             {
                 synchronized (Main.BufferSockMatchingLocks[i])
                 {
                     if(Main.BufferSockMatching[i] >= 2)
                     {
-                        System.out.println(Name + "removed a pair of socks of color " + Main.GetSockColor(i+1) + " from SockMatching buffer.");
                         Main.BufferSockMatching[i]-=2;
                         synchronized (Main.BufferMatchingShelfLocks[i])
                         {
-                            System.out.println(Name + " placed a pair of socks of color " + Main.GetSockColor(i+1) + " on MatchingShelf buffer.");
+                            synchronized (Main.OutputLock){System.out.println(Name + " : placed a pair of socks of color " + Main.GetSockColor(i+1) + " on MatchingShelf buffer.");}
                             Main.BufferMatchingShelf[i]+=1;
-                            // TODO ending condition has to be better as there can be odd no. of socks as well
-                            Main.CountSocksMatched+=2;
                         }
                     }
+                    // Check for stopping condition after every match
+                    CheckStoppingCondition();
                 }
             }
 
-
-
-            if(Main.CountSocksMatched == Main.TotalNumSocks)
+            if(StoppingCondition)
             {
                 Stop();
-                System.out.println("Stopping " + Name);
+                synchronized (Main.OutputLock){System.out.println("Stopping " + Name);}
             }
         }
     }
 
-    public static void Stop()
+    private static void Stop()
     {
         running = false;
+    }
+
+    /*
+        Stopping condition is when robots have passed all the socks to matching machine and this machine has less
+        than 2 socks left in every container (of each color)
+    */
+    private static void CheckStoppingCondition()
+    {
+        boolean flag = true;
+        if(Main.CountSocksTaken.get() == Main.TotalNumSocks)
+        {
+            for(int i=0;i<4;i++)
+            {
+                if(Main.BufferSockMatching[i]>=2){flag=false;break;}
+            }
+            if(flag)
+            {
+                StoppingCondition = true;
+            }
+        }
+    }
+
+    public static Boolean getStoppingCondition()
+    {
+        return StoppingCondition;
     }
 
 }
