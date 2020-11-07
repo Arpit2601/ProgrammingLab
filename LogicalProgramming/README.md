@@ -10,7 +10,7 @@ Use this predicate to check if X is the uncle of Y or not.
 
 `?- uncle(X, Y).`
 
-E.g.: `?- uncle(kattapa, avantika)`
+E.g.: `?- uncle(kattappa, avantika).`
 
 
 ***HALFSISTER:***
@@ -19,7 +19,7 @@ Use this predicate to check if X is the halfsister of Y or not.
 
 `?- halfsister(X, Y).`
 
-E.g.: `?- uncle(manisha, avantika)`
+E.g.: `?- halfsister(manisha, avantika).`
 
 
 
@@ -36,8 +36,11 @@ To find optimum path between two places (X and Y) use:
 
 E.g.: `?- route('Amigaon', 'Paltanbazar').`
 
+Have considered waiting time so in above example for optimum time you will obtain Amingaon-> Jalukbari -> Panbazar -> Paltanbazar with time 3.25hrs because Amingaon->Chandmari->Paltanbazar takes 8.5 hrs as you have to wait for bus 4 after reaching chandmari.
 
-**3) Bus Travel Planner:**
+Have also considered bus arriving next day i.e. when arrival time is less than departure time e.g. from Maligaon to Lokhra you will obtain 23hrs duration.
+
+**3) Prisoner Escape Problem:**
 
 To run the program use:
 
@@ -61,6 +64,6 @@ To find the optimal path:
 
 To check the validity of given path X (given as a list of gates) use: 
 
-`valid(X).`
+`?- valid(X).`
 
-E.g.: `?- valid (['G1', 'G6', 'G8', 'G9', 'G8', 'G7', 'G10', 'G15', 'G13', 'G14', 'G18', 'G17'])`
+E.g.: `?- valid(['G1', 'G6', 'G8', 'G9', 'G8', 'G7', 'G10', 'G15', 'G13', 'G14', 'G18', 'G17']).`

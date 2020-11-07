@@ -94,8 +94,7 @@ min([[_,L]|R],[Q,M],Min) :- L>=M, min(R, [Q, M], Min).
 allPaths :-
     setof([P], allPathsUtil(P), Set),
     Set \== [[]|[]],
-    printSet(Set, 1)->(
-        format('Total number of possible paths are: ~w~n', [L])).
+    printSet(Set, 1).
     
 
 allPathsUtil(P) :-

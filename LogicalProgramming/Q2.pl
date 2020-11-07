@@ -10,8 +10,7 @@ bus(3, 'Jalukbari', 'Panbazar', 9.5, 10, 3, 4).
 bus(4, 'Panbazar', 'Chandmari', 10.5, 11, 2, 10).
 bus(6, 'Panbazar', 'Paltanbazar', 11, 11.25, 1, 2).
 bus(7, 'Chandmari', 'Maligaon', 13, 14, 6, 7).
-bus(8, 'Maligaon', 'Lokhra', 14, 14.5, 5, 8).
-bus(9, 'Amingaon', 'Paltanbazar', 16, 17.5, 7, 10).
+bus(8, 'Maligaon', 'Lokhra', 14, 13, 5, 8).
 bus(10, 'Chandmari', 'Paltanbazar', 17, 17.5, 3, 6).
 
 % Instantiate all the edggs on the basis of cost, distance and time 
@@ -23,10 +22,12 @@ cost_edges(Bus_number, Source, Destination, Cost) :-
 distance_edges(Bus_number, Source, Destination, Distance) :-
     bus(Bus_number, Source, Destination, _, _, Distance, _).
     
-% duration edges having only bus number, to, from place and duration
-duration_edges(Bus_number, Source, Destination, Duration) :-
+% duration edges having only bus number, to, from place, duration, departure and arrival
+% If arrival is less than departure then 24hrs has been added to duration as bus reaches next day at destination
+duration_edges(Bus_number, Source, Destination, Duration, Departure, Arrival) :-
     bus(Bus_number, Source, Destination, Departure, Arrival, _, _),
-    Duration is Arrival - Departure.
+    (Arrival >= Departure -> Duration is Arrival - Departure; Duration is Arrival - Departure + 24).
+    
     
 % Main predicate used to find to all the optimum solutions
 route(Source, Destination) :- 
@@ -77,7 +78,7 @@ shortestPathToThisNeighbourByDistance(City, NewPath, Distance) :-
 printPathDistance(Destination) :-
     pathsDistance(Destination, ReversePath, _),
     reverse(ReversePath, Path),
-    printAtoB(Path, 0, 0, 0).
+    printAtoB(Path, 0, 0, 0, 0).
 
 %-----------------------------------------------------------------------------
 
@@ -122,7 +123,7 @@ shortestPathToThisNeighbourByCost(City, NewPath, Cost) :-
 printPathCost(Destination) :-
     pathsCost(Destination, ReversePath, _),
     reverse(ReversePath, Path),
-    printAtoB(Path, 0, 0, 0).
+    printAtoB(Path, 0, 0, 0, 0).
 
 
 %-----------------------------------------------------------------------------
@@ -138,19 +139,25 @@ findShortestPathByDuration(Source, Destination) :-
     
 % Instantiate moceForDuration() predicate with appropriate parameters described below
 moveForDuration(Source) :-
-    moveForDuration(Source, [Source], [Source], 0).
+    % parameters: from, visited array, current path from source,  duration, time you arrived at this city
+    moveForDuration(Source, [Source], [Source], 0, 0).
 
 moveForDuration(_).
 
 % Visited contains the vertices already seen from source
 % For all the neighbour edges first check if other side vertex is already visited or not
 % if not then see if visiting it leads to shortest path
-moveForDuration(From, Visited, Path, Duration) :-
-    duration_edges(_, From, To, D),
+moveForDuration(From, Visited, Path, Duration, YourArrivalTime) :-
+    duration_edges(_, From, To, D, Departure, Arrival),
     not(memberchk(To, Visited)),
-    NewDuration is D+Duration,
+    % This condition is base condition when we just start
+    % Wehn we just start our time calculation begins when we board first bus i.e. there is no waiting time otherwise we wait till our bus arrives
+    (Duration = 0 -> TempDuration is -Departure; TempDuration is 0),
+    % If departure is less than arrival then we have to wait till next day so we add 24 hrs.
+    % Tempduration is added to tackle base condition
+    (Departure < YourArrivalTime -> NewDuration is Duration + Departure - YourArrivalTime + 24 + D + TempDuration; NewDuration is Duration + Departure - YourArrivalTime + D + TempDuration),
     shortestPathToThisNeighbourByDuration(To, [To|Path], NewDuration),
-    moveForDuration(To, [To|Visited], [To|Path], NewDuration).
+    moveForDuration(To, [To|Visited], [To|Path], NewDuration, Arrival).
 
 % checks if NewPath is optimum (duration) to this City from source
 % if yes then place it in pathsDuration clause
@@ -168,20 +175,24 @@ shortestPathToThisNeighbourByDuration(City, NewPath, Duration) :-
 printPathDuration(Destination) :-
     pathsDuration(Destination, ReversePath, _),
     reverse(ReversePath, Path),
-    printAtoB(Path, 0, 0, 0).
+    printAtoB(Path, 0, 0, 0, 0).
 
 %-------------------------------------------------------------------------------------
 % Util function to print optimum path and cost/time/duration associated with it
-printAtoB([A,B|T], Cost, Time, Distance) :-
+printAtoB([A,B|T], Cost, Time, Distance, YourArrivalTime) :-
     distance_edges(N, A, B, D),         % get D as distance between A and B places
     cost_edges(N, A, B, C),             % get C as cost between A and B places   
-    duration_edges(N, A, B, Duration),  % get Duration  between A and B places
+    duration_edges(N, A, B, Duration, Departure, Arrival),  % get Duration  between A and B places
+    % This condition is base condition when we just start
+    % Wehn we just start our time calculation begins when we board first bus i.e. there is no waiting time otherwise we wait till our bus arrives
+    (Time = 0 -> TempDuration is -Departure; TempDuration is 0),
+    % If departure is less than arrival then we have to wait till next day so we add 24 hrs.
+    % Tempduration is added to tackle base condition
+    (Departure < YourArrivalTime -> NewTime is Time + Departure - YourArrivalTime + 24 + Duration + TempDuration; NewTime is Time + Departure - YourArrivalTime + Duration + TempDuration),
     NewDistance is D+Distance,          % compute distance, cost  and duration so far
     NewCost is Cost + C,
-    NewTime is Time + Duration,
     format('~w,~w->', [A, N]),          % print place A and the bus number we shoud take from here to reach B
-    printAtoB([B|T], NewCost, NewTime, NewDistance).    % recursively call same predicate from place B
+    printAtoB([B|T], NewCost, NewTime, NewDistance, Arrival).    % recursively call same predicate from place B
 
 % base case when we reach our destination
-printAtoB([A|[]], Cost, Time, Distance):- format('~w~n Distance: ~w, Cost: ~w, Time: ~w~n', [A,Distance, Cost, Time]).
-
+printAtoB([A|[]], Cost, Time, Distance, _):- format('~w~n Distance: ~w, Cost: ~w, Time: ~w~n', [A,Distance, Cost, Time]).
